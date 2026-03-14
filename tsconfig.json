@@ -12,7 +12,7 @@
     "ignoreDeprecations": "5.0",
   "types": ["node"]
   },
-  "include": ["src"],
+  "include": ["src", "src/app/modules/specialty/specialty.route.ts"],
   "exclude": ["node_modules", "dist"]
 
 }
