@@ -1,13 +1,17 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { Prisma, Role, UserStatus } from "../../generated/prisma/client";
+import { Role, UserStatus } from "../../generated/prisma/enums";
+import { prisma } from "./prisma";
+
 export const auth = betterAuth({
-  database: prismaAdapter(Prisma, {
+  database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
+
   emailAndPassword: {
     enabled: true,
   },
+
   user: {
     additionalFields: {
       role: {
