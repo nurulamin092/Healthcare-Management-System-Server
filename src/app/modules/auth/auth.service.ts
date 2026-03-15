@@ -10,12 +10,10 @@ interface IRegisterPatientPayload {
   email: string;
   password: string;
 }
-interface ILoginUserPayload {
-  email: string;
-  password: string;
-}
+
 const registerPatient = async (payload: IRegisterPatientPayload) => {
   const { name, email, password } = payload;
+
   const data = await auth.api.signUpEmail({
     body: {
       name,
@@ -26,9 +24,13 @@ const registerPatient = async (payload: IRegisterPatientPayload) => {
       // role: Role.PATIENT
     },
   });
+
   if (!data.user) {
-    throw new Error("Failed to register patient");
+    // throw new Error("Failed to register patient");
+    throw new AppError(status.BAD_REQUEST, "Failed to register patient");
   }
+
+  //TODO : Create Patient Profile In Transaction After Sign Up Of Patient In USer Model
   try {
     const patient = await prisma.$transaction(async (tx) => {
       const patientTx = await tx.patient.create({
@@ -38,8 +40,10 @@ const registerPatient = async (payload: IRegisterPatientPayload) => {
           email: payload.email,
         },
       });
+
       return patientTx;
     });
+
     const accessToken = tokenUtils.getAccessToken({
       userId: data.user.id,
       role: data.user.role,
@@ -49,6 +53,7 @@ const registerPatient = async (payload: IRegisterPatientPayload) => {
       isDeleted: data.user.isDeleted,
       emailVerified: data.user.emailVerified,
     });
+
     const refreshToken = tokenUtils.getRefreshToken({
       userId: data.user.id,
       role: data.user.role,
@@ -58,6 +63,7 @@ const registerPatient = async (payload: IRegisterPatientPayload) => {
       isDeleted: data.user.isDeleted,
       emailVerified: data.user.emailVerified,
     });
+
     return {
       ...data,
       accessToken,
@@ -74,6 +80,11 @@ const registerPatient = async (payload: IRegisterPatientPayload) => {
     throw error;
   }
 };
+
+interface ILoginUserPayload {
+  email: string;
+  password: string;
+}
 
 const loginUser = async (payload: ILoginUserPayload) => {
   const { email, password } = payload;

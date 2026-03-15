@@ -5,5 +5,9 @@ import tseslint from 'typescript-eslint';
 
 export default defineConfig(
   eslint.configs.recommended,
-  tseslint.configs.recommended,
+  tseslint.configs.recommended, {
+  rules: {
+    "@typescript-eslint/no-explicit-any": "error"
+  }
+}
 );
