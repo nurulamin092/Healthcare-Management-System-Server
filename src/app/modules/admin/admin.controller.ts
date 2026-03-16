@@ -1,64 +1,73 @@
 import { Request, Response } from "express";
-import ms, { StringValue } from "ms";
+import status from "http-status";
 import { catchAsync } from "../../shared/catchAsync";
 import { sendResponse } from "../../shared/sendResponse";
+import { AdminService } from "./admin.service";
 
-import { tokenUtils } from "../../utils/token";
-import status from "http-status";
-import { envVars } from "../../config/env";
-import { AuthService } from "../auth/auth.service";
+const getAllAdmins = catchAsync(
+    async (req: Request, res: Response) => {
+        const result = await AdminService.getAllAdmins();
 
-const registerPatient = catchAsync(async (req: Request, res: Response) => {
-  const maxAge = ms(envVars.ACCESS_TOKEN_EXPIRES_IN as StringValue);
-  console.log({ maxAge });
-  const payload = req.body;
+        sendResponse(res, {
+            httpStatusCode: status.OK,
+            success: true,
+            message: "Admins fetched successfully",
+            data: result,
+        })
+    }
+)
 
-  console.log(payload);
+const getAdminById = catchAsync(
+    async (req: Request, res: Response) => {
+        const { id } = req.params;
 
-  const result = await AuthService.registerPatient(payload);
+        const admin = await AdminService.getAdminById(id as string);
 
-  const { accessToken, refreshToken, token, ...rest } = result;
+        sendResponse(res, {
+            httpStatusCode: status.OK,
+            success: true,
+            message: "Admin fetched successfully",
+            data: admin,
+        })
+    }
+)
 
-  tokenUtils.setAccessTokenCookie(res, accessToken);
-  tokenUtils.setRefreshTokenCookie(res, refreshToken);
-  tokenUtils.setBetterAuthSessionCookie(res, token as string);
+const updateAdmin = catchAsync(
+    async (req: Request, res: Response) => {
+        const { id } = req.params;
+        const payload = req.body;
 
-  sendResponse(res, {
-    httpStatusCode: status.CREATED,
-    success: true,
-    message: "Patient registered successfully",
-    data: {
-      token,
-      accessToken,
-      refreshToken,
-      ...rest,
-    },
-  });
-});
+        const updatedAdmin = await AdminService.updateAdmin(id as string, payload);
 
-const loginUser = catchAsync(async (req: Request, res: Response) => {
-  const payload = req.body;
-  const result = await AuthService.loginUser(payload);
-  const { accessToken, refreshToken, token, ...rest } = result;
+        sendResponse(res, {
+            httpStatusCode: status.OK,
+            success: true,
+            message: "Admin updated successfully",
+            data: updatedAdmin,
+        })
+    }
+)
 
-  tokenUtils.setAccessTokenCookie(res, accessToken);
-  tokenUtils.setRefreshTokenCookie(res, refreshToken);
-  tokenUtils.setBetterAuthSessionCookie(res, token);
+const deleteAdmin = catchAsync(
+    async (req: Request, res: Response) => {
+        const { id } = req.params;
+        const user = req.user;
 
-  sendResponse(res, {
-    httpStatusCode: status.OK,
-    success: true,
-    message: "User logged in successfully",
-    data: {
-      token,
-      accessToken,
-      refreshToken,
-      ...rest,
-    },
-  });
-});
+        const result = await AdminService.deleteAdmin(id as string, user);
 
-export const AuthController = {
-  registerPatient,
-  loginUser,
+        sendResponse(res, {
+            httpStatusCode: status.OK,
+            success: true,
+            message: "Admin deleted successfully",
+            data: result,
+        })
+    }
+
+)
+
+export const AdminController = {
+    getAllAdmins,
+    updateAdmin,
+    deleteAdmin,
+    getAdminById,
 };
